@@ -6,6 +6,6 @@ build
 dist/
 LXDUI.egg-info
 logs/
-conf/lxdui.conf
+conf/
 snap/
 tmp/
