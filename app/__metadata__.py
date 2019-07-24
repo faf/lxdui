@@ -9,6 +9,7 @@ AUTHOR_URL = 'http://www.adaptivescale.com'
 AUTHOR_EMAIL = 'info@adaptivescale.com'
 KEYWORDS = 'lxc lxc-containers lxd'
 IMAGE_HUB = 'http://hub.kuti.io'
+HOST = 'default'
 
 '''
 
@@ -23,7 +24,8 @@ __default_config__ = """
 [LXDUI]
 lxdui.port = 15151
 lxdui.images.remote = https://images.linuxcontainers.org
-#lxdui.lxd.remote = https://lxd.host.org:8443/
+#lxdui.lxd.remote.local.name = lxd
+#lxdui.lxd.remote.local.url = https://lxd.host.org:8443/
 #lxdui.lxd.sslverify = true
 lxdui.jwt.token.expiration = 1200
 lxdui.jwt.secret.key = AC8d83&21Almnis710sds

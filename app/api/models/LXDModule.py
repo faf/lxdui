@@ -2,6 +2,7 @@ from app.api.models.Base import Base
 from app.api.utils.remoteImageMapper import remoteImagesList
 from app.lib.conf import Config
 from app import __metadata__ as meta
+from flask import session, escape
 
 from pylxd import Client
 import requests
@@ -16,7 +17,7 @@ class LXDModule(Base):
         conf = Config()
         logging.info('Accessing PyLXD client')
         try:
-            remoteHost = Config().get(meta.APP_NAME, '{}.lxd.remote'.format(meta.APP_NAME.lower()))
+            remoteHost = Config().get(meta.APP_NAME, '{}.lxd.remote.{}.url'.format(meta.APP_NAME.lower(),meta.HOST.lower()))
             sslKey = conf.get(meta.APP_NAME, '{}.ssl.key'.format(meta.APP_NAME.lower()))
             sslCert = conf.get(meta.APP_NAME, '{}.ssl.cert'.format(meta.APP_NAME.lower()))
             sslVerify = conf.get(meta.APP_NAME, '{}.lxd.sslverify'.format(meta.APP_NAME.lower()))
@@ -32,8 +33,10 @@ class LXDModule(Base):
             logging.info('using local socket')
             self.client = Client()
 
-
-
+        try:
+            self.remoteHostName = Config().get(meta.APP_NAME, '{}.lxd.remote.{}.name'.format(meta.APP_NAME.lower(),meta.HOST.lower()))
+        except:
+            self.remoteHostName = 'local'
 
     def listContainers(self):
         try:

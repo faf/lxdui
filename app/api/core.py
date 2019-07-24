@@ -1,6 +1,6 @@
 import time
 
-from flask import Flask, redirect
+from flask import Flask, session, escape, redirect
 from app.api.utils.authentication import initAuth
 from app.api.utils.readInstanceDetails import readInstanceDetails
 from app.lib.log import Log
@@ -18,6 +18,13 @@ PID = os.path.join(tempfile.gettempdir(), '{}.pid'.format(meta.APP_NAME).lower()
 
 # Authentication section
 initAuth(app)
+
+@app.url_value_preprocessor
+def get_hostname(endpoint, values):
+    try:
+        meta.HOST = session['host']
+    except:
+        meta.HOST = 'local'
 
 from app.api.controllers.lxd import lxd_api
 app.register_blueprint(lxd_api, url_prefix='/api/lxd')
@@ -47,6 +54,15 @@ from app.api.controllers.imageRegistry import image_registry_api
 app.register_blueprint(image_registry_api, url_prefix='/api/image_registry')
 
 from app.api.controllers.terminal import terminal
+
+@app.route('/<int:host>')
+def set_host(host):
+# TODO: map ids to hosts
+    if (host > 0):
+        session['host'] = 'hn'
+    else:
+        session['host'] = 'local'
+    return redirect('/')
 
 @app.route('/')
 def index():

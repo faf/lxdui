@@ -10,6 +10,7 @@ import tornado_xstatic as tornado_xstatic
 from terminado import TermSocket
 
 from app.api.models.LXCContainer import LXCContainer
+from app.api.models.LXDModule import LXDModule
 from app.lib.termmanager import NamedTermManager
 from app.api.utils import mappings
 
@@ -17,6 +18,7 @@ TEMPLATE_DIR = os.path.dirname(__file__).replace('/api/controllers','/ui/templat
 STATIC_DIR = os.path.dirname(__file__).replace('/api/controllers','/ui/static/')
 
 from app.api.utils.authentication import jwt_decode_handler
+
 
 def findShellTypeOfContainer(container):
     containerImage = container.info()['config'].get('image.os')
@@ -47,7 +49,9 @@ class NewTerminalHandler(tornado.web.RequestHandler):
         if not checkAuthentication(token):
             raise tornado.web.HTTPError(403)
         shellType = findShellTypeOfContainer(LXCContainer({'name': name}))
-        shell = ['bash', '-c', 'lxc exec {} -- /bin/{}'.format(name, shellType)]
+        client = LXDModule()
+        remoteHostName = client.remoteHostName
+        shell = ['bash', '-c', 'lxc exec {}:{} -- /bin/{}'.format(remoteHostName, name, shellType)]
         name, terminal = self.application.settings['term_manager'].new_named_terminal(shell_command=shell)
         self.redirect("/terminal/open/" + name+'/'+token, permanent=False)
 
