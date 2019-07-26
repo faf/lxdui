@@ -51,7 +51,7 @@ class NewTerminalHandler(tornado.web.RequestHandler):
         shellType = findShellTypeOfContainer(LXCContainer({'name': name}))
         client = LXDModule()
         remoteHostName = client.remoteHostName
-        shell = ['bash', '-c', 'lxc exec {}:{} -- /bin/{}'.format(remoteHostName, name, shellType)]
+        shell = ['bash', '-c', 'lxc exec --env LANG=POSIX {}:{} -- /bin/{}'.format(remoteHostName, name, shellType)]
         name, terminal = self.application.settings['term_manager'].new_named_terminal(shell_command=shell)
         self.redirect("/terminal/open/" + name+'/'+token, permanent=False)
 

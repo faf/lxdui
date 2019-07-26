@@ -1,8 +1,9 @@
 import time
 
-from flask import Flask, session, escape, redirect
+from flask import Flask, session, redirect
 from app.api.utils.authentication import initAuth
 from app.api.utils.readInstanceDetails import readInstanceDetails
+from app.lib.remote import Remote
 from app.lib.log import Log
 from app import __metadata__ as meta
 import os
@@ -22,9 +23,12 @@ initAuth(app)
 @app.url_value_preprocessor
 def get_hostname(endpoint, values):
     try:
-        meta.HOST = session['host']
+        if (isinstance(session['host'], int)):
+            meta.HOST = session['host']
+        else:
+            meta.HOST = None
     except:
-        meta.HOST = 'local'
+        meta.HOST = None
 
 from app.api.controllers.lxd import lxd_api
 app.register_blueprint(lxd_api, url_prefix='/api/lxd')
@@ -53,15 +57,16 @@ app.register_blueprint(storage_pool_api, url_prefix='/api/storage_pool')
 from app.api.controllers.imageRegistry import image_registry_api
 app.register_blueprint(image_registry_api, url_prefix='/api/image_registry')
 
+from app.api.controllers.remote import remote_api
+app.register_blueprint(remote_api, url_prefix='/api/remote')
+
 from app.api.controllers.terminal import terminal
 
 @app.route('/<int:host>')
 def set_host(host):
-# TODO: map ids to hosts
-    if (host > 0):
-        session['host'] = 'hn'
-    else:
-        session['host'] = 'local'
+    if (Remote().get(host) is not None):
+        session['host'] = host
+
     return redirect('/')
 
 @app.route('/')

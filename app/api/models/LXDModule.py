@@ -1,6 +1,7 @@
 from app.api.models.Base import Base
 from app.api.utils.remoteImageMapper import remoteImagesList
 from app.lib.conf import Config
+from app.lib.remote import Remote
 from app import __metadata__ as meta
 from flask import session, escape
 
@@ -16,26 +17,28 @@ class LXDModule(Base):
 
         conf = Config()
         logging.info('Accessing PyLXD client')
-        try:
-            remoteHost = Config().get(meta.APP_NAME, '{}.lxd.remote.{}.url'.format(meta.APP_NAME.lower(),meta.HOST.lower()))
-            sslKey = conf.get(meta.APP_NAME, '{}.ssl.key'.format(meta.APP_NAME.lower()))
-            sslCert = conf.get(meta.APP_NAME, '{}.ssl.cert'.format(meta.APP_NAME.lower()))
-            sslVerify = conf.get(meta.APP_NAME, '{}.lxd.sslverify'.format(meta.APP_NAME.lower()))
 
-            if sslVerify.lower in ['true', '1', 't', 'y', 'yes', 'yeah', 'yup', 'certainly']:
-                sslVerify = True
-            else:
-                sslVerify = False
+        remote = Remote().get(meta.HOST)
+        use_local = True
+        if remote is not None:
+            try:
+                sslKey = conf.get(meta.APP_NAME, '{}.ssl.key'.format(meta.APP_NAME.lower()))
+                sslCert = conf.get(meta.APP_NAME, '{}.ssl.cert'.format(meta.APP_NAME.lower()))
+                sslVerify = remote['sslverify']
+                remoteHost = remote['url']
 
-            self.client = Client(endpoint=remoteHost,
-                cert=(sslCert, sslKey), verify=sslVerify)
-        except:
+                self.client = Client(endpoint=remoteHost,
+                    cert=(sslCert, sslKey), verify=sslVerify)
+                self.remoteHostName = remote['name']
+
+                use_local = False
+            except:
+                logging.info('Failed to connect to remote')
+                meta.HOST = None
+
+        if use_local:
             logging.info('using local socket')
             self.client = Client()
-
-        try:
-            self.remoteHostName = Config().get(meta.APP_NAME, '{}.lxd.remote.{}.name'.format(meta.APP_NAME.lower(),meta.HOST.lower()))
-        except:
             self.remoteHostName = 'local'
 
     def listContainers(self):

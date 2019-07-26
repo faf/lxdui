@@ -1,3 +1,4 @@
+const ROOT = location.protocol+'//'+location.hostname+(location.port ? ':'+location.port: '') + "/";
 const API = location.protocol+'//'+location.hostname+(location.port ? ':'+location.port: '')+"/api/";
 const WEB = location.protocol+'//'+location.hostname+(location.port ? ':'+location.port: '')+"/ui/";
 
@@ -46,6 +47,12 @@ var App = App || {
             success: $.proxy(this.getInfoSuccess, this),
             error: $.proxy(this.getInfoError, this),
         });
+        $.ajax({
+            url: this.baseAPI+'remote',
+            method:'GET',
+            success: $.proxy(this.getRemote, this),
+            error: $.proxy(this.getRemoteError, this),
+        });
     },
     getInfoSuccess:function(response){
         this.info = response.data;
@@ -55,6 +62,21 @@ var App = App || {
     },
     getInfoError:function(response) {
         $('#stamplike').text('LXD is not Installed').removeClass('label-success').addClass('label-danger');
+    },
+    getRemote:function(response) {
+        var options = '';
+        for (i in response.data) {
+            options = options + '<option value="' + i + '"' + (response.data[i].selected ? ' selected="selected"' : '') + '>' + escape(response.data[i].name) + '</option>';
+        }
+        if (options != '') {
+            $('#remote-select').append('<form action=""><select id="remote" class="form-control">' + options + '</select></form>');
+            $('#remote').change(function(){
+                return window.location = ROOT + $( "#remote option:checked").val();
+            });
+        }
+    },
+    getRemoteError:function(response) {
+        console.log('Unable to get remotes');
     },
     setDefaultHeaders: function(){
         if(!sessionStorage.getItem('authToken') && window.location.href!==WEB){
